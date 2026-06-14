@@ -94,6 +94,15 @@
   .muted { color: var(--muted); font-size: 13px; }
   .addex { display: flex; gap: 8px; }
   .addex select { flex: 1; }
+  .seg { display: flex; gap: 6px; margin: 12px 0 4px; }
+  .seg button {
+    flex: 1; background: var(--card2); border: 1px solid var(--line); color: var(--muted);
+    border-radius: 10px; padding: 9px 4px; font-size: 13px; cursor: pointer;
+  }
+  .seg button.active { background: var(--accent); color: #04141f; border-color: var(--accent); font-weight: 700; }
+  .setrow .bodylbl { flex: 1; text-align: center; color: var(--text); background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 10px 0; font-size: 14px; }
+  .setrow .unit { color: var(--muted); flex: none; font-size: 13px; }
+  .setrow select { flex: none; width: auto; padding: 10px 6px; font-size: 14px; }
   .suggest {
     position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20;
     background: var(--card2); border: 1px solid var(--accent); border-radius: 10px;
@@ -135,6 +144,19 @@
     <div class="addex" style="position:relative">
       <input id="exInput" placeholder="例: ベンチプレス（過去の種目から選択も可）" autocomplete="off">
       <div id="exSuggest" class="suggest hidden"></div>
+    </div>
+
+    <label style="margin-top:12px">記録方法</label>
+    <div class="seg" id="measureSel">
+      <button data-m="reps" class="active">負荷 × 回数</button>
+      <button data-m="time">負荷 × 時間</button>
+    </div>
+
+    <label style="margin-top:10px">負荷の種類</label>
+    <div class="seg" id="loadSel">
+      <button data-l="weight" class="active">重量 (kg)</button>
+      <button data-l="body">自重</button>
+      <button data-l="speed">速度 (km/h)</button>
     </div>
 
     <div id="prevBox"></div>
@@ -200,8 +222,11 @@
 
 <script>
 const KEY = 'trainingLog.v1';
-let db = load();          // { sessions: [...] }
-let draft = [];           // 今日追加した種目の配列 [{name, sets:[{w,r}]}]
+let db = load();           // { sessions: [...] }
+let draft = [];            // 今日追加した種目 [{name, measure, load, sets}]
+let curMeasure = 'reps';   // 記録方法: 'reps' | 'time'
+let curLoad = 'weight';    // 負荷: 'weight'(kg) | 'body'(自重) | 'speed'(km/h)
+let curTimeUnit = 'sec';   // 時間の入力単位: 'sec'(秒) | 'min'(分)
 
 function load() {
   try { return JSON.parse(localStorage.getItem(KEY)) || { sessions: [] }; }
@@ -218,6 +243,54 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 1600);
 }
 
+// ---- 記録方法・負荷のヘルパー（旧データ互換）----
+// 記録方法: 'reps' | 'time'（旧 'time' は時間、それ以外は回数）
+function exMeasure(e){ return e.measure === 'time' ? 'time' : 'reps'; }
+// 負荷種類: 'weight' | 'body' | 'speed'
+function exLoad(e){
+  if (e.load === 'weight' || e.load === 'body' || e.load === 'speed') return e.load;
+  if (e.measure === 'rep' || e.measure === 'time') return 'body'; // 旧 自重(回数)/時間 は自重扱い
+  return 'weight';                                                // 旧 重量×回数
+}
+function sV(s){ return s.v ?? s.w ?? 0; }  // 負荷の数値（kg または km/h）
+function sR(s){ return s.r ?? 0; }         // 回数
+function sSec(s){ return s.sec ?? 0; }     // 秒
+
+function fmtSec(s){ s = Math.round(s); const m = Math.floor(s/60), x = s%60;
+  return m ? `${m}分${x ? x+'秒' : ''}` : `${x}秒`; }
+function loadStr(e, s){ const l = exLoad(e);
+  return l === 'body' ? '自重' : (l === 'speed' ? `${sV(s)}km/h` : `${sV(s)}kg`); }
+function amtStr(e, s){ return exMeasure(e) === 'time' ? fmtSec(sSec(s)) : `${sR(s)}回`; }
+function setPill(e, s){ return `${loadStr(e,s)} × ${amtStr(e,s)}`; }
+function setsPills(e){ return e.sets.map(s => `<span class="pill">${setPill(e,s)}</span>`).join(''); }
+
+// 主要指標（ベスト）
+function bestVal(e){ const l = exLoad(e), m = exMeasure(e);
+  if (l === 'weight' || l === 'speed') return Math.max(...e.sets.map(sV));
+  return m === 'time' ? Math.max(...e.sets.map(sSec)) : Math.max(...e.sets.map(sR)); }
+function bestFmt(e, v){ const l = exLoad(e), m = exMeasure(e);
+  if (l === 'weight') return `${Math.round(v*10)/10}kg`;
+  if (l === 'speed')  return `${Math.round(v*10)/10}km/h`;
+  return m === 'time' ? fmtSec(v) : `${v}回`; }
+function bestName(e){ const l = exLoad(e), m = exMeasure(e);
+  if (l === 'weight') return '重量';
+  if (l === 'speed')  return '速度';
+  return m === 'time' ? '最長' : '回数'; }
+// ボリューム（量／距離）
+function volVal(e){ const l = exLoad(e), m = exMeasure(e);
+  if (l === 'speed' && m === 'time') return e.sets.reduce((a,s)=>a+sV(s)*sSec(s)/3600, 0); // 距離km
+  if (l === 'weight' && m === 'reps') return e.sets.reduce((a,s)=>a+sV(s)*sR(s), 0);        // 総挙上量kg
+  return m === 'time' ? e.sets.reduce((a,s)=>a+sSec(s),0) : e.sets.reduce((a,s)=>a+sR(s),0); }
+function volFmt(e, v){ const l = exLoad(e), m = exMeasure(e);
+  if (l === 'speed' && m === 'time') return `${Math.round(v*100)/100}km`;
+  if (l === 'weight' && m === 'reps') return `${Math.round(v)}kg`;
+  return m === 'time' ? fmtSec(v) : `${Math.round(v)}回`; }
+function volName(e){ return (exLoad(e) === 'speed' && exMeasure(e) === 'time') ? '距離' : '量'; }
+function metricShort(e){ const l = exLoad(e), m = exMeasure(e), v = bestVal(e);
+  if (l === 'weight') return `最大${Math.round(v*10)/10}kg`;
+  if (l === 'speed')  return `最高${Math.round(v*10)/10}km/h`;
+  return m === 'time' ? `最長${fmtSec(v)}` : `最大${v}回`; }
+
 // 全種目名（重複なし、新しい順）
 function allExercises() {
   const seen = new Set(); const out = [];
@@ -226,52 +299,75 @@ function allExercises() {
       if (!seen.has(e.name)) { seen.add(e.name); out.push(e.name); }
   return out;
 }
-// ある種目の直近の記録（draft保存前のdbから）
+// 直近の記録（記録方法・負荷つき）
 function lastRecord(name) {
   for (const s of [...db.sessions].sort((a,b)=>b.date.localeCompare(a.date)))
     for (const e of s.exercises)
-      if (e.name === name) return { date: s.date, sets: e.sets };
+      if (e.name === name) return { date: s.date, sets: e.sets, measure: exMeasure(e), load: exLoad(e) };
   return null;
 }
 
-// ---- セット入力UI ----
-function addSetRow(w = '', r = '') {
-  const wrap = $('sets');
-  const idx = wrap.children.length + 1;
-  const div = document.createElement('div');
-  div.className = 'setrow';
-  div.innerHTML = `
-    <span class="num">${idx}</span>
-    <input type="number" inputmode="decimal" placeholder="重量kg" class="w" value="${w}">
-    <span class="x">×</span>
-    <input type="number" inputmode="numeric" placeholder="回数" class="r" value="${r}">
-    <button class="del">✕</button>`;
+// ---- 記録方法・負荷の切替 ----
+function setMeasure(m) { curMeasure = m;
+  document.querySelectorAll('#measureSel button').forEach(b => b.classList.toggle('active', b.dataset.m === m));
+  resetRows(); }
+function setLoad(l) { curLoad = l;
+  document.querySelectorAll('#loadSel button').forEach(b => b.classList.toggle('active', b.dataset.l === l));
+  resetRows(); }
+function resetRows() { $('sets').innerHTML = ''; addSetRow(); addSetRow(); addSetRow(); }
+
+// ---- セット入力UI（記録方法・負荷に応じて入力欄を切替）----
+function addSetRow(vals = {}) {
+  const wrap = $('sets'); const idx = wrap.children.length + 1;
+  const div = document.createElement('div'); div.className = 'setrow';
+  let loadInput;
+  if (curLoad === 'weight') loadInput = `<input type="number" inputmode="decimal" placeholder="重量kg" class="v" value="${vals.v ?? ''}">`;
+  else if (curLoad === 'speed') loadInput = `<input type="number" inputmode="decimal" placeholder="速度km/h" class="v" value="${vals.v ?? ''}">`;
+  else loadInput = `<span class="bodylbl">自重</span>`;
+  let amtInput;
+  if (curMeasure === 'time')
+    amtInput = `<input type="number" inputmode="decimal" placeholder="時間" class="t" value="${vals.t ?? ''}">
+      <select class="tu">
+        <option value="sec"${curTimeUnit==='sec'?' selected':''}>秒</option>
+        <option value="min"${curTimeUnit==='min'?' selected':''}>分</option>
+      </select>`;
+  else
+    amtInput = `<input type="number" inputmode="numeric" placeholder="回数" class="r" value="${vals.r ?? ''}"><span class="unit">回</span>`;
+  div.innerHTML = `<span class="num">${idx}</span>${loadInput}<span class="x">×</span>${amtInput}<button class="del">✕</button>`;
   div.querySelector('.del').onclick = () => { div.remove(); renumber(); };
+  const tu = div.querySelector('.tu');
+  if (tu) tu.onchange = () => { curTimeUnit = tu.value; }; // 選んだ単位を次の行の既定にする
   wrap.appendChild(div);
 }
 function renumber() {
   [...$('sets').children].forEach((d,i) => d.querySelector('.num').textContent = i+1);
 }
 function readSets() {
-  return [...$('sets').children].map(d => ({
-    w: parseFloat(d.querySelector('.w').value) || 0,
-    r: parseInt(d.querySelector('.r').value) || 0
-  })).filter(s => s.r > 0);
+  return [...$('sets').children].map(d => {
+    const set = {};
+    if (curLoad === 'weight' || curLoad === 'speed') set.v = parseFloat(d.querySelector('.v').value) || 0;
+    if (curMeasure === 'time') {
+      const val = parseFloat(d.querySelector('.t').value) || 0;
+      const unit = d.querySelector('.tu').value;
+      set.sec = Math.round(unit === 'min' ? val*60 : val);
+    } else {
+      set.r = parseInt(d.querySelector('.r').value) || 0;
+    }
+    return set;
+  }).filter(s => curMeasure === 'time' ? s.sec > 0 : s.r > 0);
 }
 
 // ---- 前回記録の表示 ----
 function showPrev() {
-  const name = $('exInput').value.trim();
-  const box = $('prevBox');
+  const name = $('exInput').value.trim(); const box = $('prevBox');
   if (!name) { box.innerHTML = ''; return; }
   const rec = lastRecord(name);
   if (!rec) { box.innerHTML = `<div class="prev"><div class="ttl">前回の記録</div>初めての種目です。がんばって！</div>`; return; }
-  const pills = rec.sets.map(s => `<span class="pill">${s.w}kg × ${s.r}</span>`).join('');
-  const best = Math.max(...rec.sets.map(s=>s.w));
+  const pills = rec.sets.map(s => `<span class="pill">${setPill(rec,s)}</span>`).join('');
   box.innerHTML = `<div class="prev">
     <div class="ttl">前回の記録（${rec.date}）</div>
     ${pills}
-    <div class="muted" style="margin-top:6px">最大重量 ${best}kg / 目安: 同じか少し上を狙う</div>
+    <div class="muted" style="margin-top:6px">${metricShort(rec)} / 目安: 同じか少し上を狙う</div>
   </div>`;
 }
 
@@ -280,13 +376,10 @@ function addExerciseToDraft() {
   const name = $('exInput').value.trim();
   const sets = readSets();
   if (!name) { toast('種目名を入力'); return; }
-  if (!sets.length) { toast('セットを入力'); return; }
-  draft.push({ name, sets });
-  $('exInput').value = '';
-  $('prevBox').innerHTML = '';
-  $('sets').innerHTML = ''; addSetRow();
-  renderDraft();
-  toast('追加しました');
+  if (!sets.length) { toast(curMeasure === 'time' ? '時間を入力' : '回数を入力'); return; }
+  draft.push({ name, measure: curMeasure, load: curLoad, sets });
+  $('exInput').value = ''; $('prevBox').innerHTML = '';
+  resetRows(); renderDraft(); toast('追加しました');
 }
 
 // ---- 選んだ日付に保存済みの内容 ----
@@ -299,7 +392,7 @@ function renderSavedToday() {
     return;
   }
   const items = sess.exercises.map((e,i) => {
-    const pills = e.sets.map(x=>`<span class="pill">${x.w}kg × ${x.r}</span>`).join('');
+    const pills = setsPills(e);
     return `<div style="display:flex;justify-content:space-between;align-items:start;padding:8px 0;border-top:1px solid var(--line)">
       <div style="flex:1"><span class="exname">${e.name}</span><div style="margin-top:4px">${pills}</div></div>
       <button class="del" data-i="${i}" style="width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--down);border-radius:8px;cursor:pointer;flex:none">✕</button>
@@ -328,7 +421,7 @@ function renderDraft() {
         <span class="exname">${e.name}</span>
         <button class="del" data-i="${i}" style="width:34px;height:34px;border:1px solid var(--line);background:transparent;color:var(--down);border-radius:8px;cursor:pointer">✕</button>
       </div>
-      <div style="margin-top:6px">${e.sets.map(s=>`<span class="pill">${s.w}kg × ${s.r}</span>`).join('')}</div>
+      <div style="margin-top:6px">${setsPills(e)}</div>
     </div>`).join('');
   list.querySelectorAll('.del').forEach(b => b.onclick = () => {
     draft.splice(+b.dataset.i,1); renderDraft();
@@ -340,7 +433,6 @@ function saveSession() {
   if (!draft.length) { toast('追加された種目がありません'); return; }
   const date = $('logDate').value || todayStr();
   const cond = $('condition').value.trim();
-  // 同じ日付のセッションがあればマージ
   let sess = db.sessions.find(s => s.date === date);
   if (sess) {
     sess.exercises.push(...draft);
@@ -360,12 +452,12 @@ function renderHist() {
   const sessions = [...db.sessions].sort((a,b)=>b.date.localeCompare(a.date));
   const list = $('histList');
   if (!sessions.length) { list.innerHTML = `<div class="empty">まだ記録がありません</div>`; return; }
-  list.innerHTML = sessions.map((s, si) => {
+  list.innerHTML = sessions.map(s => {
     const exs = s.exercises.filter(e => !filter || e.name === filter);
     if (!exs.length) return '';
     const exHtml = exs.map(e => {
-      const pills = e.sets.map(x=>`<span class="pill">${x.w}kg × ${x.r}</span>`).join('');
-      const cmp = compareToPrev(s.date, e.name, e.sets);
+      const pills = setsPills(e);
+      const cmp = compareToPrev(s.date, e);
       return `<div class="ex"><span class="exname">${e.name}</span> ${cmp}<div style="margin-top:4px">${pills}</div></div>`;
     }).join('');
     return `<div class="sess">
@@ -388,23 +480,23 @@ function fmtDate(d) {
   return `${d}（${wd[dt.getDay()]}）`;
 }
 // その種目の、当該日付より前の最新記録と比較
-function compareToPrev(date, name, sets) {
+function compareToPrev(date, e) {
+  const name = e.name;
   let prev = null;
   for (const s of [...db.sessions].sort((a,b)=>b.date.localeCompare(a.date))) {
     if (s.date >= date) continue;
-    const e = s.exercises.find(x => x.name === name);
-    if (e) { prev = e; break; }
+    const p = s.exercises.find(x => x.name === name);
+    if (p) { prev = p; break; }
   }
   if (!prev) return `<span class="muted">（初回）</span>`;
-  const maxNow = Math.max(...sets.map(s=>s.w));
-  const maxPrev = Math.max(...prev.sets.map(s=>s.w));
-  const volNow = sets.reduce((a,s)=>a+s.w*s.r,0);
-  const volPrev = prev.sets.reduce((a,s)=>a+s.w*s.r,0);
+  if (exMeasure(prev) !== exMeasure(e) || exLoad(prev) !== exLoad(e))
+    return `<span class="muted">（記録方法が前回と異なるため比較なし）</span>`;
+  const bn = bestVal(e), bp = bestVal(prev), vn = volVal(e), vp = volVal(prev);
   let parts = [];
-  if (maxNow > maxPrev) parts.push(`<span class="up">▲重量+${(maxNow-maxPrev).toFixed(1)}kg</span>`);
-  else if (maxNow < maxPrev) parts.push(`<span class="down">▼重量-${(maxPrev-maxNow).toFixed(1)}kg</span>`);
-  if (volNow > volPrev) parts.push(`<span class="up">▲量+${Math.round(volNow-volPrev)}</span>`);
-  else if (volNow < volPrev) parts.push(`<span class="down">▼量-${Math.round(volPrev-volNow)}</span>`);
+  if (bn > bp) parts.push(`<span class="up">▲${bestName(e)}+${bestFmt(e, bn-bp)}</span>`);
+  else if (bn < bp) parts.push(`<span class="down">▼${bestName(e)}-${bestFmt(e, bp-bn)}</span>`);
+  if (vn > vp) parts.push(`<span class="up">▲${volName(e)}+${volFmt(e, vn-vp)}</span>`);
+  else if (vn < vp) parts.push(`<span class="down">▼${volName(e)}-${volFmt(e, vp-vn)}</span>`);
   if (!parts.length) parts.push(`<span class="same">＝前回維持</span>`);
   return parts.join(' ');
 }
@@ -414,31 +506,32 @@ function renderStat() {
   const name = $('statEx').value;
   const body = $('statBody');
   if (!name) { body.innerHTML = `<div class="empty">種目を選択してください</div>`; return; }
-  const points = [];
+  const points = []; let refE = null;
   for (const s of [...db.sessions].sort((a,b)=>a.date.localeCompare(b.date))) {
     const e = s.exercises.find(x => x.name === name);
-    if (e) points.push({ date: s.date, max: Math.max(...e.sets.map(x=>x.w)), vol: e.sets.reduce((a,x)=>a+x.w*x.r,0) });
+    if (e) { refE = e; points.push({ date: s.date, max: bestVal(e), vol: volVal(e) }); }
   }
   if (!points.length) { body.innerHTML = `<div class="empty">記録なし</div>`; return; }
   const best = Math.max(...points.map(p=>p.max));
   const last = points[points.length-1];
   const first = points[0];
-  const growth = (last.max - first.max);
+  const growth = last.max - first.max;
+  const isTime = exMeasure(refE) === 'time';
+  const gfmt = v => (v>=0?'+':'-') + bestFmt(refE, Math.abs(v));
   body.innerHTML = `
     <div class="card stat">
-      <div class="box"><div class="v">${best}kg</div><div class="l">自己ベスト</div></div>
-      <div class="box"><div class="v">${last.max}kg</div><div class="l">直近の最大</div></div>
-      <div class="box"><div class="v">${growth>=0?'+':''}${growth.toFixed(1)}kg</div><div class="l">初回比</div></div>
+      <div class="box"><div class="v">${bestFmt(refE,best)}</div><div class="l">自己ベスト(${bestName(refE)})</div></div>
+      <div class="box"><div class="v">${bestFmt(refE,last.max)}</div><div class="l">直近</div></div>
+      <div class="box"><div class="v">${gfmt(growth)}</div><div class="l">初回比</div></div>
       <div class="box"><div class="v">${points.length}</div><div class="l">実施回数</div></div>
     </div>
     <div class="card">
-      <h2>最大重量の推移</h2>
-      ${sparkline(points)}
+      <h2>${bestName(refE)}の推移</h2>
+      ${sparkline(points, isTime)}
     </div>`;
 }
-function sparkline(points) {
+function sparkline(points, isTime) {
   const W=300,H=120,pad=24;
-  const xs = points.map((_,i)=>i);
   const maxV = Math.max(...points.map(p=>p.max));
   const minV = Math.min(...points.map(p=>p.max));
   const span = maxV-minV || 1;
@@ -448,9 +541,10 @@ function sparkline(points) {
   const dots = points.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.max).toFixed(1)}" r="3" fill="#38bdf8"/>`).join('');
   const labels = points.map((p,i)=> (points.length<=6||i===0||i===points.length-1) ?
     `<text x="${x(i).toFixed(1)}" y="${H-6}" fill="#94a3b8" font-size="9" text-anchor="middle">${p.date.slice(5)}</text>`:'').join('');
+  const al = v => isTime ? Math.round(v)+'s' : v;
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
-    <text x="2" y="${y(maxV).toFixed(1)+3}" fill="#64748b" font-size="9">${maxV}</text>
-    <text x="2" y="${y(minV).toFixed(1)+3}" fill="#64748b" font-size="9">${minV}</text>
+    <text x="2" y="${y(maxV).toFixed(1)+3}" fill="#64748b" font-size="9">${al(maxV)}</text>
+    <text x="2" y="${y(minV).toFixed(1)+3}" fill="#64748b" font-size="9">${al(minV)}</text>
     <path d="${path}" fill="none" stroke="#38bdf8" stroke-width="2"/>
     ${dots}${labels}
   </svg>`;
@@ -467,12 +561,14 @@ function openSuggest() {
   const head = q ? `「${$('exInput').value.trim()}」に一致 (${matched.length})` : `過去の種目から選択 (${matched.length})`;
   box.innerHTML = `<div class="head">${head}</div>` + matched.map(n => {
     const rec = lastRecord(n);
-    const sub = rec ? `前回 ${rec.date.slice(5)}・最大${Math.max(...rec.sets.map(s=>s.w))}kg` : '';
+    const sub = rec ? `前回 ${rec.date.slice(5)}・${metricShort(rec)}` : '';
     return `<div class="opt" data-name="${n}">${n}${sub?`<div class="sub">${sub}</div>`:''}</div>`;
   }).join('');
   box.querySelectorAll('.opt').forEach(o => o.onmousedown = ev => {
     ev.preventDefault();
     $('exInput').value = o.dataset.name;
+    const rec = lastRecord(o.dataset.name);
+    if (rec) { setMeasure(rec.measure); setLoad(rec.load); } // 過去の種目はその記録方法・負荷に自動で合わせる
     closeSuggest(); showPrev();
   });
   box.classList.remove('hidden');
@@ -522,9 +618,11 @@ function importData(file) {
 // ---- 初期化 ----
 function init() {
   $('logDate').value = todayStr();
-  addSetRow(); addSetRow(); addSetRow();
+  setMeasure('reps'); setLoad('weight'); // 初期状態（空セット3行を用意）
   refreshAll();
 
+  document.querySelectorAll('#measureSel button').forEach(b => b.onclick = () => setMeasure(b.dataset.m));
+  document.querySelectorAll('#loadSel button').forEach(b => b.onclick = () => setLoad(b.dataset.l));
   $('logDate').addEventListener('change', renderSavedToday);
   $('exInput').addEventListener('input', () => { showPrev(); openSuggest(); });
   $('exInput').addEventListener('focus', openSuggest);
