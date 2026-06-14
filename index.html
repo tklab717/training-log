@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>トレーニング記録</title>
+<!-- ホーム画面追加で全画面アプリ化（iOS Safari） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="トレ記録">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAEmklEQVR4nO3cPXJjRRiG0SsXAZkDqvAacEixEkIWwKJYACEroQjNGkwVgTOyIdKUR2NJ96f7dt+3z0k9Y7e6H3/TI8s6TZ14fHr+1HoNbPP2+nJqvYZmCxBwvhaB7/oFRTyuveKu/kVEzKWacVf7xELmnhphF/+EQmapkmE/lPpE0yRm1inZTZHvDCFTytZpvXlCi5mStva0KWgxU8OWrlaNdyGzl6VXkMUTWszsaWlvi4IWMy0s6W520GKmpbn9FX0eGlqbFbTpTA/mdHg3aDHTk3s93gxazPToVpfu0ES5GrTpTM+u9flh0GLmCD7q1JWDKF8FbTpzJJe9mtBE+SJo05kjet+tCU0UQRPlc9CuGxzZuV8TmiiCJsppmlw3yGFCE0XQRBE0UR7cn0liQhNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRPlm9YLuOeH3/+6+rG/f/lxx5WM5aj7fur1rcBubeilnjf4aI6+711eOZZs6po/z8cS9r27oNduUo+beyQp+95V0Fs3p7fNPYqkfe8qaNiqm6BLfZf3NC2OIG3fuwkaShA0UQRNFEETRdBEqf5aju/++Onqx/79+c/aX55GWp171Ql960HN+TjH1PLcqwU9d9GiztL63KsEvXSxos7Qw7kXD3rtIv/59tfCK2FPa8+vdNSe5SCKoIkiaKIImiiCJkr3v/VdQy+v3d1Dj7/IWtNQQY8U8tn5MY8S9jBXjhFjfm+Uxz9E0KMc5j0j7EN80CMc4hLp+xEfNGOJDjp9Gq2VvC/RQTMeQRNF0EQRNFGigx7lp2NLJe9LdNCMJz7o5Gm0Rvp+xAc9TfmHONcI+zBE0NM0xmHeMsrjH+rlo+dDTf5J2aVRQj4bKuiz0Q55JMNcORiDoIkiaKIImiiCJkrxoNe+mfX3//1WeCXsae35lX7z8yoTeukivZN/hh7OvdqVY+5ixZyl9blXvUPfW7SYM7U89+o/KRTtmFqdu2c5iCJoogiaKIImiqCJ0k3QpV6j7LXOy6TtezdBQwldBb31u7yXKXE0SfveVdDTtH5zetrUI0rZ9+6Cnqblm9Tbph5Vwr6fHp+eP7VexC23fkO7xw1NcdR97z5oWKLLKwesJWiiCJoogiaKoIkiaKIImiiCJoqgiSJoogiaKIImiqCJImiiCJoogiaKoIkiaKIImiiCJoqgiSJoogiaKIImiqCJ8vD2+nJqvQgoxYQmiqCJImiiPEzTNLlHk+Dt9eVkQhNF0ET5HLRrB0d27teEJoqgifJF0K4dHNH7bk1oonwVtCnNkVz2akIT5cOgTWmO4KNOr05oUdOza326chDlZtCmND261eXdCS1qenKvx1lXDlHTgzkdukMTZXbQpjQtze1v0YQWNS0s6W7xlUPU7Glpb5vifHx6/rTl78M1awfnpv8UmtbUsKWrzc9yiJqStvZUNEZXENYqNRiLPg9tWrNGyW6qBWhac0+NAVh9ogqbSzX/Jd/1iiDuce11HW125xV3vhb/p/ofeDxZi/593mwAAAAASUVORK5CYII=">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card2: #283548;
+    --line: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent2: #22c55e;
+    --up: #22c55e;
+    --down: #f87171;
+    --warn: #fbbf24;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--text); padding-bottom: 90px; line-height: 1.5;
+  }
+  header {
+    position: sticky; top: 0; z-index: 10; background: rgba(15,23,42,.92);
+    backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+    padding: 14px 16px; font-size: 18px; font-weight: 700; text-align: center;
+    padding-top: calc(14px + env(safe-area-inset-top));
+  }
+  .wrap { padding: 16px; max-width: 640px; margin: 0 auto; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+  input, select, textarea {
+    width: 100%; background: var(--card2); border: 1px solid var(--line); color: var(--text);
+    border-radius: 10px; padding: 12px; font-size: 16px; outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 56px; }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+  .btn {
+    width: 100%; border: none; border-radius: 12px; padding: 14px; font-size: 16px;
+    font-weight: 700; cursor: pointer; color: #04141f; background: var(--accent);
+  }
+  .btn.green { background: var(--accent2); color: #052e16; }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .btn.sm { width: auto; padding: 8px 14px; font-size: 14px; }
+  .btn.danger { background: transparent; color: var(--down); border: 1px solid var(--line); }
+  .setrow { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .setrow .num { width: 30px; text-align: center; color: var(--muted); font-size: 14px; flex: none; }
+  .setrow input { padding: 10px; }
+  .setrow .x { color: var(--muted); flex: none; }
+  .setrow .del { flex: none; width: 38px; padding: 10px 0; text-align: center; background: transparent; border: 1px solid var(--line); border-radius: 8px; color: var(--down); cursor: pointer; }
+  .prev {
+    background: var(--card2); border: 1px dashed var(--accent); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 12px; font-size: 14px;
+  }
+  .prev .ttl { color: var(--accent); font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+  .pill { display: inline-block; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; padding: 3px 10px; margin: 2px 4px 2px 0; font-size: 13px; }
+  .tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0; display: flex;
+    background: rgba(15,23,42,.96); backdrop-filter: blur(8px); border-top: 1px solid var(--line);
+  }
+  .tabbar { padding-bottom: env(safe-area-inset-bottom); }
+  .tabbar button {
+    flex: 1; background: none; border: none; color: var(--muted); padding: 12px 0 18px;
+    font-size: 12px; cursor: pointer;
+  }
+  .tabbar button .ico { font-size: 20px; display: block; margin-bottom: 2px; }
+  .tabbar button.active { color: var(--accent); }
+  .sess { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .sess .date { font-weight: 700; font-size: 15px; }
+  .sess .cond { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .sess .ex { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .sess .exname { font-weight: 600; color: var(--accent); }
+  .up { color: var(--up); font-weight: 700; }
+  .down { color: var(--down); font-weight: 700; }
+  .same { color: var(--muted); }
+  .hidden { display: none; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .addex { display: flex; gap: 8px; }
+  .addex select { flex: 1; }
+  .suggest {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20;
+    background: var(--card2); border: 1px solid var(--accent); border-radius: 10px;
+    max-height: 240px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  }
+  .suggest .opt {
+    padding: 12px 14px; font-size: 15px; cursor: pointer; border-bottom: 1px solid var(--line);
+  }
+  .suggest .opt:last-child { border-bottom: none; }
+  .suggest .opt:active, .suggest .opt.hl { background: var(--accent); color: #04141f; }
+  .suggest .opt .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .suggest .opt:active .sub, .suggest .opt.hl .sub { color: #04303f; }
+  .suggest .head { padding: 8px 14px; font-size: 12px; color: var(--muted); }
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--accent2); color: #052e16; padding: 10px 18px; border-radius: 24px;
+    font-weight: 700; font-size: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+  .stat { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat .box { flex: 1; min-width: 90px; background: var(--card2); border-radius: 10px; padding: 12px; text-align: center; }
+  .stat .box .v { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .stat .box .l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+<header>💪 トレーニング記録</header>
+
+<!-- ===== 記録タブ ===== -->
+<div id="tab-log" class="wrap">
+  <div class="card">
+    <label>日付</label>
+    <input type="date" id="logDate">
+    <div id="savedToday"></div>
+  </div>
+
+  <div class="card">
+    <label>種目</label>
+    <div class="addex" style="position:relative">
+      <input id="exInput" placeholder="例: ベンチプレス（過去の種目から選択も可）" autocomplete="off">
+      <div id="exSuggest" class="suggest hidden"></div>
+    </div>
+
+    <div id="prevBox"></div>
+
+    <div id="sets" style="margin-top:12px"></div>
+    <button class="btn ghost sm" id="addSet" style="margin-top:4px">＋ セット追加</button>
+
+    <button class="btn green" id="addEx" style="margin-top:14px">この種目を追加</button>
+  </div>
+
+  <div class="card" id="draftCard" style="display:none">
+    <h2>今日の記録（未保存）</h2>
+    <div id="draftList"></div>
+    <label style="margin-top:8px">体調・メモ</label>
+    <textarea id="condition" placeholder="例: 睡眠よし、肩の調子◎"></textarea>
+    <button class="btn" id="saveSession" style="margin-top:12px">💾 今日の記録を保存</button>
+    <button class="btn ghost sm" id="clearDraft" style="margin-top:8px">下書きを破棄</button>
+  </div>
+</div>
+
+<!-- ===== 履歴タブ ===== -->
+<div id="tab-hist" class="wrap hidden">
+  <div class="card">
+    <label>種目で絞り込み</label>
+    <select id="filterEx"><option value="">すべて</option></select>
+  </div>
+  <div id="histList"></div>
+</div>
+
+<!-- ===== 統計タブ ===== -->
+<div id="tab-stat" class="wrap hidden">
+  <div class="card">
+    <label>種目を選択</label>
+    <select id="statEx"></select>
+  </div>
+  <div id="statBody"></div>
+</div>
+
+<!-- ===== 設定タブ ===== -->
+<div id="tab-set" class="wrap hidden">
+  <div class="card">
+    <h2>データ管理</h2>
+    <p class="muted">記録はこの端末のブラウザ内に保存されます。バックアップや機種変更時はエクスポートしてください。</p>
+    <button class="btn ghost" id="exportBtn" style="margin-top:8px">⬇️ データをエクスポート（JSON）</button>
+    <label style="margin-top:14px">インポート（JSONファイル）</label>
+    <input type="file" id="importFile" accept="application/json">
+  </div>
+  <div class="card">
+    <h2>全消去</h2>
+    <button class="btn danger" id="wipeBtn">すべての記録を削除</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== タブバー ===== -->
+<div class="tabbar">
+  <button data-tab="log" class="active"><span class="ico">📝</span>記録</button>
+  <button data-tab="hist"><span class="ico">📚</span>履歴</button>
+  <button data-tab="stat"><span class="ico">📈</span>統計</button>
+  <button data-tab="set"><span class="ico">⚙️</span>設定</button>
+</div>
+
+<script>
+const KEY = 'trainingLog.v1';
+let db = load();          // { sessions: [...] }
+let draft = [];           // 今日追加した種目の配列 [{name, sets:[{w,r}]}]
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || { sessions: [] }; }
+  catch { return { sessions: [] }; }
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+function $(id) { return document.getElementById(id); }
+function todayStr() {
+  const d = new Date(); const z = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+}
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+// 全種目名（重複なし、新しい順）
+function allExercises() {
+  const seen = new Set(); const out = [];
+  for (const s of [...db.sessions].reverse())
+    for (const e of s.exercises)
+      if (!seen.has(e.name)) { seen.add(e.name); out.push(e.name); }
+  return out;
+}
+// ある種目の直近の記録（draft保存前のdbから）
+function lastRecord(name) {
+  for (const s of [...db.sessions].sort((a,b)=>b.date.localeCompare(a.date)))
+    for (const e of s.exercises)
+      if (e.name === name) return { date: s.date, sets: e.sets };
+  return null;
+}
+
+// ---- セット入力UI ----
+function addSetRow(w = '', r = '') {
+  const wrap = $('sets');
+  const idx = wrap.children.length + 1;
+  const div = document.createElement('div');
+  div.className = 'setrow';
+  div.innerHTML = `
+    <span class="num">${idx}</span>
+    <input type="number" inputmode="decimal" placeholder="重量kg" class="w" value="${w}">
+    <span class="x">×</span>
+    <input type="number" inputmode="numeric" placeholder="回数" class="r" value="${r}">
+    <button class="del">✕</button>`;
+  div.querySelector('.del').onclick = () => { div.remove(); renumber(); };
+  wrap.appendChild(div);
+}
+function renumber() {
+  [...$('sets').children].forEach((d,i) => d.querySelector('.num').textContent = i+1);
+}
+function readSets() {
+  return [...$('sets').children].map(d => ({
+    w: parseFloat(d.querySelector('.w').value) || 0,
+    r: parseInt(d.querySelector('.r').value) || 0
+  })).filter(s => s.r > 0);
+}
+
+// ---- 前回記録の表示 ----
+function showPrev() {
+  const name = $('exInput').value.trim();
+  const box = $('prevBox');
+  if (!name) { box.innerHTML = ''; return; }
+  const rec = lastRecord(name);
+  if (!rec) { box.innerHTML = `<div class="prev"><div class="ttl">前回の記録</div>初めての種目です。がんばって！</div>`; return; }
+  const pills = rec.sets.map(s => `<span class="pill">${s.w}kg × ${s.r}</span>`).join('');
+  const best = Math.max(...rec.sets.map(s=>s.w));
+  box.innerHTML = `<div class="prev">
+    <div class="ttl">前回の記録（${rec.date}）</div>
+    ${pills}
+    <div class="muted" style="margin-top:6px">最大重量 ${best}kg / 目安: 同じか少し上を狙う</div>
+  </div>`;
+}
+
+// ---- 種目を下書きに追加 ----
+function addExerciseToDraft() {
+  const name = $('exInput').value.trim();
+  const sets = readSets();
+  if (!name) { toast('種目名を入力'); return; }
+  if (!sets.length) { toast('セットを入力'); return; }
+  draft.push({ name, sets });
+  $('exInput').value = '';
+  $('prevBox').innerHTML = '';
+  $('sets').innerHTML = ''; addSetRow();
+  renderDraft();
+  toast('追加しました');
+}
+
+// ---- 選んだ日付に保存済みの内容 ----
+function renderSavedToday() {
+  const date = $('logDate').value || todayStr();
+  const box = $('savedToday');
+  const sess = db.sessions.find(s => s.date === date);
+  if (!sess || !sess.exercises.length) {
+    box.innerHTML = `<div class="muted" style="margin-top:8px">この日の記録はまだありません</div>`;
+    return;
+  }
+  const items = sess.exercises.map((e,i) => {
+    const pills = e.sets.map(x=>`<span class="pill">${x.w}kg × ${x.r}</span>`).join('');
+    return `<div style="display:flex;justify-content:space-between;align-items:start;padding:8px 0;border-top:1px solid var(--line)">
+      <div style="flex:1"><span class="exname">${e.name}</span><div style="margin-top:4px">${pills}</div></div>
+      <button class="del" data-i="${i}" style="width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--down);border-radius:8px;cursor:pointer;flex:none">✕</button>
+    </div>`;
+  }).join('');
+  box.innerHTML = `<div class="prev" style="border-style:solid;margin-top:10px;margin-bottom:0">
+    <div class="ttl">✅ この日の記録済み（${sess.exercises.length}種目）</div>
+    ${items}
+    ${sess.condition?`<div class="muted" style="margin-top:6px">📝 ${sess.condition}</div>`:''}
+  </div>`;
+  box.querySelectorAll('.del').forEach(b => b.onclick = () => {
+    if (!confirm('この種目を記録から削除しますか？')) return;
+    sess.exercises.splice(+b.dataset.i,1);
+    if (!sess.exercises.length) db.sessions = db.sessions.filter(s => s !== sess);
+    save(); renderSavedToday(); refreshAll();
+  });
+}
+
+function renderDraft() {
+  const card = $('draftCard'); const list = $('draftList');
+  if (!draft.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  list.innerHTML = draft.map((e,i) => `
+    <div class="sess" style="margin-bottom:8px;background:var(--card2)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="exname">${e.name}</span>
+        <button class="del" data-i="${i}" style="width:34px;height:34px;border:1px solid var(--line);background:transparent;color:var(--down);border-radius:8px;cursor:pointer">✕</button>
+      </div>
+      <div style="margin-top:6px">${e.sets.map(s=>`<span class="pill">${s.w}kg × ${s.r}</span>`).join('')}</div>
+    </div>`).join('');
+  list.querySelectorAll('.del').forEach(b => b.onclick = () => {
+    draft.splice(+b.dataset.i,1); renderDraft();
+  });
+}
+
+// ---- セッション保存 ----
+function saveSession() {
+  if (!draft.length) { toast('追加された種目がありません'); return; }
+  const date = $('logDate').value || todayStr();
+  const cond = $('condition').value.trim();
+  // 同じ日付のセッションがあればマージ
+  let sess = db.sessions.find(s => s.date === date);
+  if (sess) {
+    sess.exercises.push(...draft);
+    if (cond) sess.condition = cond;
+  } else {
+    db.sessions.push({ date, condition: cond, exercises: [...draft] });
+  }
+  save();
+  draft = []; $('condition').value = '';
+  renderDraft(); refreshAll();
+  toast('保存しました 🎉');
+}
+
+// ---- 履歴 ----
+function renderHist() {
+  const filter = $('filterEx').value;
+  const sessions = [...db.sessions].sort((a,b)=>b.date.localeCompare(a.date));
+  const list = $('histList');
+  if (!sessions.length) { list.innerHTML = `<div class="empty">まだ記録がありません</div>`; return; }
+  list.innerHTML = sessions.map((s, si) => {
+    const exs = s.exercises.filter(e => !filter || e.name === filter);
+    if (!exs.length) return '';
+    const exHtml = exs.map(e => {
+      const pills = e.sets.map(x=>`<span class="pill">${x.w}kg × ${x.r}</span>`).join('');
+      const cmp = compareToPrev(s.date, e.name, e.sets);
+      return `<div class="ex"><span class="exname">${e.name}</span> ${cmp}<div style="margin-top:4px">${pills}</div></div>`;
+    }).join('');
+    return `<div class="sess">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div><div class="date">${fmtDate(s.date)}</div>${s.condition?`<div class="cond">📝 ${s.condition}</div>`:''}</div>
+        <button class="del" data-date="${s.date}" style="width:34px;height:34px;border:1px solid var(--line);background:transparent;color:var(--down);border-radius:8px;cursor:pointer">✕</button>
+      </div>
+      ${exHtml}</div>`;
+  }).join('');
+  list.querySelectorAll('.del').forEach(b => b.onclick = () => {
+    if (confirm('この日の記録を削除しますか？')) {
+      db.sessions = db.sessions.filter(s => s.date !== b.dataset.date);
+      save(); refreshAll();
+    }
+  });
+}
+function fmtDate(d) {
+  const wd = ['日','月','火','水','木','金','土'];
+  const dt = new Date(d + 'T00:00');
+  return `${d}（${wd[dt.getDay()]}）`;
+}
+// その種目の、当該日付より前の最新記録と比較
+function compareToPrev(date, name, sets) {
+  let prev = null;
+  for (const s of [...db.sessions].sort((a,b)=>b.date.localeCompare(a.date))) {
+    if (s.date >= date) continue;
+    const e = s.exercises.find(x => x.name === name);
+    if (e) { prev = e; break; }
+  }
+  if (!prev) return `<span class="muted">（初回）</span>`;
+  const maxNow = Math.max(...sets.map(s=>s.w));
+  const maxPrev = Math.max(...prev.sets.map(s=>s.w));
+  const volNow = sets.reduce((a,s)=>a+s.w*s.r,0);
+  const volPrev = prev.sets.reduce((a,s)=>a+s.w*s.r,0);
+  let parts = [];
+  if (maxNow > maxPrev) parts.push(`<span class="up">▲重量+${(maxNow-maxPrev).toFixed(1)}kg</span>`);
+  else if (maxNow < maxPrev) parts.push(`<span class="down">▼重量-${(maxPrev-maxNow).toFixed(1)}kg</span>`);
+  if (volNow > volPrev) parts.push(`<span class="up">▲量+${Math.round(volNow-volPrev)}</span>`);
+  else if (volNow < volPrev) parts.push(`<span class="down">▼量-${Math.round(volPrev-volNow)}</span>`);
+  if (!parts.length) parts.push(`<span class="same">＝前回維持</span>`);
+  return parts.join(' ');
+}
+
+// ---- 統計 ----
+function renderStat() {
+  const name = $('statEx').value;
+  const body = $('statBody');
+  if (!name) { body.innerHTML = `<div class="empty">種目を選択してください</div>`; return; }
+  const points = [];
+  for (const s of [...db.sessions].sort((a,b)=>a.date.localeCompare(b.date))) {
+    const e = s.exercises.find(x => x.name === name);
+    if (e) points.push({ date: s.date, max: Math.max(...e.sets.map(x=>x.w)), vol: e.sets.reduce((a,x)=>a+x.w*x.r,0) });
+  }
+  if (!points.length) { body.innerHTML = `<div class="empty">記録なし</div>`; return; }
+  const best = Math.max(...points.map(p=>p.max));
+  const last = points[points.length-1];
+  const first = points[0];
+  const growth = (last.max - first.max);
+  body.innerHTML = `
+    <div class="card stat">
+      <div class="box"><div class="v">${best}kg</div><div class="l">自己ベスト</div></div>
+      <div class="box"><div class="v">${last.max}kg</div><div class="l">直近の最大</div></div>
+      <div class="box"><div class="v">${growth>=0?'+':''}${growth.toFixed(1)}kg</div><div class="l">初回比</div></div>
+      <div class="box"><div class="v">${points.length}</div><div class="l">実施回数</div></div>
+    </div>
+    <div class="card">
+      <h2>最大重量の推移</h2>
+      ${sparkline(points)}
+    </div>`;
+}
+function sparkline(points) {
+  const W=300,H=120,pad=24;
+  const xs = points.map((_,i)=>i);
+  const maxV = Math.max(...points.map(p=>p.max));
+  const minV = Math.min(...points.map(p=>p.max));
+  const span = maxV-minV || 1;
+  const x = i => pad + (points.length>1 ? i/(points.length-1)*(W-pad*2) : 0);
+  const y = v => H-pad - (v-minV)/span*(H-pad*2);
+  const path = points.map((p,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(p.max).toFixed(1)}`).join(' ');
+  const dots = points.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.max).toFixed(1)}" r="3" fill="#38bdf8"/>`).join('');
+  const labels = points.map((p,i)=> (points.length<=6||i===0||i===points.length-1) ?
+    `<text x="${x(i).toFixed(1)}" y="${H-6}" fill="#94a3b8" font-size="9" text-anchor="middle">${p.date.slice(5)}</text>`:'').join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
+    <text x="2" y="${y(maxV).toFixed(1)+3}" fill="#64748b" font-size="9">${maxV}</text>
+    <text x="2" y="${y(minV).toFixed(1)+3}" fill="#64748b" font-size="9">${minV}</text>
+    <path d="${path}" fill="none" stroke="#38bdf8" stroke-width="2"/>
+    ${dots}${labels}
+  </svg>`;
+}
+
+// ---- 種目候補ドロップダウン ----
+function openSuggest() {
+  const box = $('exSuggest');
+  const q = $('exInput').value.trim().toLowerCase();
+  const exs = allExercises();
+  if (!exs.length) { box.classList.add('hidden'); return; }
+  const matched = q ? exs.filter(n => n.toLowerCase().includes(q)) : exs;
+  if (!matched.length) { box.classList.add('hidden'); return; }
+  const head = q ? `「${$('exInput').value.trim()}」に一致 (${matched.length})` : `過去の種目から選択 (${matched.length})`;
+  box.innerHTML = `<div class="head">${head}</div>` + matched.map(n => {
+    const rec = lastRecord(n);
+    const sub = rec ? `前回 ${rec.date.slice(5)}・最大${Math.max(...rec.sets.map(s=>s.w))}kg` : '';
+    return `<div class="opt" data-name="${n}">${n}${sub?`<div class="sub">${sub}</div>`:''}</div>`;
+  }).join('');
+  box.querySelectorAll('.opt').forEach(o => o.onmousedown = ev => {
+    ev.preventDefault();
+    $('exInput').value = o.dataset.name;
+    closeSuggest(); showPrev();
+  });
+  box.classList.remove('hidden');
+}
+function closeSuggest() { $('exSuggest').classList.add('hidden'); }
+
+// ---- セレクト類の更新 ----
+function refreshSelectors() {
+  const exs = allExercises();
+  const cur = $('filterEx').value;
+  $('filterEx').innerHTML = `<option value="">すべて</option>` + exs.map(n=>`<option value="${n}">${n}</option>`).join('');
+  $('filterEx').value = cur;
+  const curS = $('statEx').value;
+  $('statEx').innerHTML = `<option value="">選択...</option>` + exs.map(n=>`<option value="${n}">${n}</option>`).join('');
+  $('statEx').value = curS;
+}
+function refreshAll() { refreshSelectors(); renderHist(); renderStat(); renderSavedToday(); }
+
+// ---- タブ切替 ----
+function switchTab(name) {
+  ['log','hist','stat','set'].forEach(t => $('tab-'+t).classList.toggle('hidden', t!==name));
+  document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('active', b.dataset.tab===name));
+  if (name==='hist') renderHist();
+  if (name==='stat') renderStat();
+}
+
+// ---- エクスポート/インポート ----
+function exportData() {
+  const blob = new Blob([JSON.stringify(db,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `training-log-${todayStr()}.json`;
+  a.click();
+}
+function importData(file) {
+  const fr = new FileReader();
+  fr.onload = () => {
+    try {
+      const d = JSON.parse(fr.result);
+      if (!d.sessions) throw 0;
+      db = d; save(); refreshAll(); toast('インポート完了');
+    } catch { toast('ファイルが読めません'); }
+  };
+  fr.readAsText(file);
+}
+
+// ---- 初期化 ----
+function init() {
+  $('logDate').value = todayStr();
+  addSetRow(); addSetRow(); addSetRow();
+  refreshAll();
+
+  $('logDate').addEventListener('change', renderSavedToday);
+  $('exInput').addEventListener('input', () => { showPrev(); openSuggest(); });
+  $('exInput').addEventListener('focus', openSuggest);
+  $('exInput').addEventListener('blur', () => setTimeout(closeSuggest, 150));
+  $('addSet').onclick = () => addSetRow();
+  $('addEx').onclick = addExerciseToDraft;
+  $('saveSession').onclick = saveSession;
+  $('clearDraft').onclick = () => { if(confirm('下書きを破棄しますか？')){draft=[];renderDraft();} };
+  $('filterEx').onchange = renderHist;
+  $('statEx').onchange = renderStat;
+  $('exportBtn').onclick = exportData;
+  $('importFile').onchange = e => e.target.files[0] && importData(e.target.files[0]);
+  $('wipeBtn').onclick = () => { if(confirm('本当にすべて削除しますか？元に戻せません')){db={sessions:[]};save();refreshAll();toast('削除しました');} };
+  document.querySelectorAll('.tabbar button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+}
+init();
+</script>
+</body>
+</html>
